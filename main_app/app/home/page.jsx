@@ -1,5 +1,10 @@
 "use client";
 
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useSDK } from "@metamask/sdk-react";
+
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { 
@@ -79,6 +84,36 @@ export default function HomePage() {
     }
   };
 
+  const router = useRouter();
+  const { sdk, connected, account } = useSDK();
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    // Redirect to landing page if not connected
+    if (!connected) {
+      router.push('/');
+    }
+  }, [connected, router]);
+
+  const disconnectWallet = async () => {
+    try {
+      setError("");
+      if (sdk) {
+        await sdk.terminate();
+        localStorage.removeItem('metamask-connected');
+        router.push('/');
+      }
+    } catch (error) {
+      console.error("Error disconnecting from MetaMask:", error);
+      setError(error instanceof Error ? error.message : "Failed to disconnect from MetaMask");
+    }
+  };
+
+  if (!connected) {
+    return null; // or a loading state while redirecting
+  }
+
+
   return (
     <div className="flex h-screen bg-gray-900">
       {/* Navigation Bar */}
@@ -149,7 +184,9 @@ export default function HomePage() {
             <Settings size={20} className="text-purple-400" />
             <span>Settings</span>
           </button>
-          <button className="w-full flex items-center space-x-2 px-4 py-2 text-red-400 hover:bg-gray-700 rounded-lg transition-all duration-300">
+          <button 
+          onClick={disconnectWallet}
+          className="w-full flex items-center space-x-2 px-4 py-2 text-red-400 hover:bg-gray-700 rounded-lg transition-all duration-300">
             <LogOut size={20} />
             <span>Logout</span>
           </button>

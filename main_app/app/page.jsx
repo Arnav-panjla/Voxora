@@ -1,77 +1,41 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import detectEthereumProvider from "@metamask/detect-provider";
+import { useSDK } from "@metamask/sdk-react";
+import { useState } from "react";
 
 export default function Home() {
   const router = useRouter();
-  const [account, setAccount] = useState(null);
-  const [provider, setProvider] = useState(null);
+  const { sdk, connected, account, connecting } = useSDK();
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    const setup = async () => {
-      try {
-        const provider = await detectEthereumProvider();
-        
-        if (provider && provider === window.ethereum) {
-          console.log("MetaMask is available!");
-          setProvider(provider);
-          
-          // Check if already connected
-          const accounts = await provider.request({ method: 'eth_accounts' });
-          if (accounts.length > 0) {
-            setAccount(accounts[0]);
-          }
-
-          // Listen for account changes
-          provider.on('accountsChanged', (accounts) => {
-            if (accounts.length > 0) {
-              setAccount(accounts[0]);
-            } else {
-              setAccount(null);
-            }
-          });
-
-          // Listen for chain changes
-          provider.on('chainChanged', () => {
-            window.location.reload();
-          });
-
-        } else {
-          console.log("Please install MetaMask!");
-        }
-      } catch (error) {
-        console.error("Error during setup:", error);
-      }
-    };
-
-    setup();
-
-    // Cleanup listeners on unmount
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener('accountsChanged', setAccount);
-        window.ethereum.removeListener('chainChanged', () => {});
-      }
-    };
-  }, []);
+  // Check if MetaMask is installed
+  const checkMetaMaskInstalled = () => {
+    if (typeof window !== 'undefined') {
+      return Boolean(window.ethereum && window.ethereum.isMetaMask);
+    }
+    return false;
+  };
 
   const connectWallet = async () => {
-    if (!provider) {
-      alert("Please install MetaMask to continue.");
-      return;
-    }
-
     try {
-      const accounts = await provider.request({ 
-        method: 'eth_requestAccounts' 
-      });
-      setAccount(accounts[0]);
+      setError("");
+      if (!checkMetaMaskInstalled()) {
+        setError("Please install MetaMask first!");
+        window.open('https://metamask.io/download/', '_blank');
+        return;
+      }
+
+      if (!sdk) {
+        setError("SDK not initialized");
+        return;
+      }
+
+      await sdk.connect();
     } catch (error) {
       console.error("Error connecting to MetaMask:", error);
-      alert("Failed to connect to MetaMask.");
+      setError(error instanceof Error ? error.message : "Failed to connect to MetaMask");
     }
   };
 
@@ -88,7 +52,14 @@ export default function Home() {
             <br /><br />
             This is more than just social media—it's a <strong className="text-yellow-300">🎨 canvas for your creativity</strong>, a playground for your ideas, and a space where every connection is tailored to your vision.
           </p>
-          {account ? (
+
+          {error && (
+            <div className="mb-4 p-4 bg-red-500 text-white rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {connected ? (
             <Link
               href="/home"
               className="inline-block px-8 py-4 bg-green-500 text-black text-lg font-semibold rounded-lg shadow-lg hover:bg-green-600 transition"
@@ -98,10 +69,17 @@ export default function Home() {
           ) : (
             <button
               onClick={connectWallet}
-              className="px-8 py-4 bg-yellow-500 text-black text-lg font-semibold rounded-lg shadow-lg hover:bg-yellow-600 transition"
+              disabled={connecting}
+              className="px-8 py-4 bg-yellow-500 text-black text-lg font-semibold rounded-lg shadow-lg hover:bg-yellow-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Connect MetaMask 🦊
+              {connecting ? "Connecting..." : "Connect MetaMask 🦊"}
             </button>
+          )}
+
+          {account && (
+            <div className="mt-4 text-sm">
+              Connected: {account.slice(0, 6)}...{account.slice(-4)}
+            </div>
           )}
         </div>
       </section>

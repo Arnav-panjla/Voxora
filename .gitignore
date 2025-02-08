@@ -1,5 +1,16 @@
-# Node modules
-/node_modules
+# Ignore all node_modules folders, no matter where they are
+node_modules/
+
+# Ignore build directories
+.next/
+out/
+
+# Ignore logs and environment files
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.env
+
 
 # Build output
 /dist

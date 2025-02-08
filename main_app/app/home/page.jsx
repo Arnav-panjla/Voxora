@@ -37,11 +37,10 @@ export default function HomePage() {
     { icon: Home, label: "Dashboard", color: "text-purple-400" },
     { icon: MessageCircle, label: "Chats", color: "text-blue-400" },
     { icon: Users, label: "Friends", color: "text-green-400" },
-    { icon: Bell, label: "Notifications", color: "text-yellow-400" },
-    { icon: Palette, label: "Themes", color: "text-pink-400" },
-    { icon: BookOpen, label: "Stories", color: "text-indigo-400" },
-    { icon: PlusCircle, label: "Create Bot", color: "text-red-400" },
-    { icon: HeartHandshake, label: "Community", color: "text-orange-400" }
+    { icon: PlusCircle, label: "Create", color: "text-red-400" },
+    { icon: HeartHandshake, label: "Community", color: "text-orange-400" },
+    { icon: Settings, label: "Settings", color: "text-purple-400" },
+    { icon: LogOut, label: "Logout", color: "text-red-400" }
   ];
 
   const aiCharacters = [
@@ -114,13 +113,46 @@ export default function HomePage() {
   }
 
 
+  const handleButtonClick = (item) => {
+    console.log(`Button clicked: ${item.label}`);
+  
+    if (item.label === 'Dashboard') {
+      router.push('/dashboard');  // Navigate to the Dashboard page
+    }
+  
+    if (item.label === 'Chats') {
+      router.push('/chats');  // Navigate to the Chats page
+    }
+  
+    if (item.label === 'Friends') {
+      router.push('/friends');  // Navigate to the Friends page
+    }
+  
+    if (item.label === 'Create') {
+      router.push('/create');  // Navigate to the Create page
+    }
+  
+    if (item.label === 'Community') {
+      window.location.href = 'https://github.com/Arnav-panjla/Voxora';  // Navigate to the GitHub page for the Community
+    }
+  
+    if (item.label === 'Settings') {
+      router.push('/settings');  // Navigate to the Settings page
+    }
+  
+    if (item.label === 'Logout') {
+      disconnectWallet();  // Call the logout function to disconnect the wallet
+    }
+  };
+  
+
   return (
     <div className="flex h-screen bg-gray-900">
       {/* Navigation Bar */}
       <div className="w-20 bg-gray-900 border-r border-gray-700 flex flex-col items-center py-4 space-y-8">
         {/* App Logo */}
         <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
-          <span className="text-white text-2xl font-bold">V</span>
+          <span className="text-white text-2xl font-bold">Vx</span>
         </div>
 
         {/* Nav Items */}
@@ -128,9 +160,10 @@ export default function HomePage() {
           {navItems.map((item, index) => (
             <button
               key={index}
+              onClick={() => handleButtonClick(item)}
               className="w-12 h-12 rounded-xl hover:bg-gray-800 flex flex-col items-center justify-center group transition-all duration-300"
             >
-              <item.icon className={`${item.color} group-hover:scale-110 transition-transform duration-300`} size={24} />
+              <item.icon className={`${item.color} group-hover:scale-110 transition-transform duration-300`} size={20} />
               <span className="text-xs mt-1 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">{item.label}</span>
             </button>
           ))}
@@ -146,8 +179,8 @@ export default function HomePage() {
               <User className="text-gray-300" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-200">Your Name</h2>
-              <p className="text-sm text-gray-400">Online</p>
+              <h2 className="font-semibold text-gray-200">{account?.slice(0, 6)}....{account?.slice(-5)}</h2>
+              <p className="text-sm text-green-400">Online</p>
             </div>
           </div>
         </div>
@@ -176,20 +209,6 @@ export default function HomePage() {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Settings & Logout */}
-        <div className="border-t border-gray-700 p-4 space-y-2 bg-gray-800">
-          <button className="w-full flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-all duration-300">
-            <Settings size={20} className="text-purple-400" />
-            <span>Settings</span>
-          </button>
-          <button 
-          onClick={disconnectWallet}
-          className="w-full flex items-center space-x-2 px-4 py-2 text-red-400 hover:bg-gray-700 rounded-lg transition-all duration-300">
-            <LogOut size={20} />
-            <span>Logout</span>
-          </button>
         </div>
       </div>
 

@@ -11,7 +11,7 @@ const RootLayout = ({ children }) => {
         <html lang="en">
             <body className="app flex flex-row bg-gray-900 text-white">
                 <MetaMaskUIProvider>
-                    <main className="flex-1 px-6 py-4 bg-gray-800 shadow-md rounded-lg">
+                    <main className="flex-1 px-6 bg-gray-800 shadow-md rounded-lg">
                         {children}
                     </main>
                 </MetaMaskUIProvider>

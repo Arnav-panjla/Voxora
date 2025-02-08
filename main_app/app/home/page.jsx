@@ -1,107 +1,218 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
-import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from 'lucide-react';
-import avatar from '@public/assets/user.jpg';
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { 
+  MessageCircle, 
+  Send, 
+  User, 
+  Settings, 
+  LogOut,
+  Home,
+  Users,
+  Bell,
+  Palette,
+  BookOpen,
+  PlusCircle,
+  HeartHandshake
+} from "lucide-react";
 
-export default function Home() {
-  const [posts, setPosts] = useState([]);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function HomePage() {
+  const [messages, setMessages] = useState([
+    { id: 1, sender: "AI Bot 1", content: "Hello! How are you today?", timestamp: "10:00 AM" },
+    { id: 2, sender: "You", content: "I'm doing great, thanks!", timestamp: "10:01 AM" },
+    { id: 3, sender: "AI Bot 2", content: "That's wonderful to hear!", timestamp: "10:02 AM" }
+  ]);
+  
+  const [newMessage, setNewMessage] = useState("");
+  const [selectedChat, setSelectedChat] = useState("AI Bot 1");
+  const messagesEndRef = useRef(null);
+
+  const navItems = [
+    { icon: Home, label: "Dashboard", color: "text-purple-400" },
+    { icon: MessageCircle, label: "Chats", color: "text-blue-400" },
+    { icon: Users, label: "Friends", color: "text-green-400" },
+    { icon: Bell, label: "Notifications", color: "text-yellow-400" },
+    { icon: Palette, label: "Themes", color: "text-pink-400" },
+    { icon: BookOpen, label: "Stories", color: "text-indigo-400" },
+    { icon: PlusCircle, label: "Create Bot", color: "text-red-400" },
+    { icon: HeartHandshake, label: "Community", color: "text-orange-400" }
+  ];
+
+  const aiCharacters = [
+    { id: 1, name: "AI Bot 1", status: "online", lastMessage: "Hello! How are you today?", color: "bg-gradient-to-r from-purple-500 to-pink-500" },
+    { id: 2, name: "AI Bot 2", status: "online", lastMessage: "That's wonderful to hear!", color: "bg-gradient-to-r from-blue-500 to-teal-500" },
+    { id: 3, name: "Historical Figure", status: "offline", lastMessage: "Let's chat later", color: "bg-gradient-to-r from-green-500 to-emerald-500" },
+    { id: 4, name: "Fictional Hero", status: "online", lastMessage: "Ready for adventure!", color: "bg-gradient-to-r from-orange-500 to-yellow-500" }
+  ];
+
+  // Existing functions remain the same
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    async function fetchPosts() {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/post/show');
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        setPosts(data.reverse());
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchPosts();
-  }, []);
+    scrollToBottom();
+  }, [messages]);
 
-  if (error) return <div className="text-center text-red-500 mt-10">Error: {error}</div>;
-  if (loading) return <div className="text-center mt-10">Loading...</div>;
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (newMessage.trim()) {
+      const newMsg = {
+        id: messages.length + 1,
+        sender: "You",
+        content: newMessage,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages([...messages, newMsg]);
+      setNewMessage("");
+      
+      setTimeout(() => {
+        const aiResponse = {
+          id: messages.length + 2,
+          sender: selectedChat,
+          content: "Thanks for your message! This is a simulated response.",
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setMessages(prev => [...prev, aiResponse]);
+      }, 1000);
+    }
+  };
 
   return (
-    <div className="max-w-3xl mx-auto min-h-screen">
-      <header className="bg-white border-b p-4 sticky top-0 z-10">
-        <h1 className="text-2xl font-bold text-center">Welcome to ChainVerse 🤖</h1>
-      </header>
+    <div className="flex h-screen bg-gray-900">
+      {/* Navigation Bar */}
+      <div className="w-20 bg-gray-900 border-r border-gray-700 flex flex-col items-center py-4 space-y-8">
+        {/* App Logo */}
+        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
+          <span className="text-white text-2xl font-bold">V</span>
+        </div>
 
-      {posts.length === 0 ? (
-        <p className="text-center mt-10">No posts found.</p>
-      ) : (
-        posts.map((post) => (
-          <div key={post.chatId} className="bg-white border-b mb-4">
-            <div className="flex items-center justify-between p-4">
-              <div className="flex items-center">
-                <Image
-                  src={avatar}
-                  alt={'you'}
-                  width={32}
-                  height={32}
-                  className="rounded-full mr-3"
-                />
-                <span className="text-xl font-semibold">You</span>
-              </div>
-              <MoreHorizontal className="w-5 h-5 text-gray-500" />
+        {/* Nav Items */}
+        <div className="flex-1 space-y-6">
+          {navItems.map((item, index) => (
+            <button
+              key={index}
+              className="w-12 h-12 rounded-xl hover:bg-gray-800 flex flex-col items-center justify-center group transition-all duration-300"
+            >
+              <item.icon className={`${item.color} group-hover:scale-110 transition-transform duration-300`} size={24} />
+              <span className="text-xs mt-1 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Sidebar */}
+      <div className="w-64 bg-gray-800 border-r border-gray-700">
+        {/* User Profile */}
+        <div className="p-4 border-b border-gray-700 bg-gradient-to-r from-gray-800 to-gray-900">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+              <User className="text-gray-300" />
             </div>
-
-            {/* Horizontal Scroll for Images */}
-            <div className="relative">
-              <div className="flex overflow-x-auto space-x-4 pb-4">
-                {[post.url_1, post.url_2, post.url_3, post.url_4].filter(Boolean).map((url, index) => (
-                  <div key={index} className="relative aspect-square flex-shrink-0 w-80">
-                    <Image
-                      src={url}
-                      alt={`Post Image ${index + 1}`}
-                      layout="fill"
-                      objectFit="cover"
-                      className="w-full h-full rounded-lg"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="p-4">
-              <div className="flex justify-between mb-4">
-                <div className="flex space-x-4">
-                  <Heart className="w-6 h-6 cursor-pointer" />
-                  <MessageCircle className="w-6 h-6 cursor-pointer" />
-                  <Send className="w-6 h-6 cursor-pointer" />
-                </div>
-                <Bookmark className="w-6 h-6 cursor-pointer" />
-              </div>
-
-              <p className="font-semibold mb-2">
-                {2+Math.floor(Math.random() * 10)} likes
-              </p>
-
-              {post.parsedResponses.map((response, index) => (
-                <div key={index} className="mb-2">
-                  <span className="font-semibold mr-2">{response.name}:</span>
-                  <span>{response.response}</span>
-                </div>
-              ))}
-
-              <p className="text-gray-500 text-sm mt-2">
-                {new Date(post.createdAt).toLocaleDateString()}
-              </p>
+            <div>
+              <h2 className="font-semibold text-gray-200">Your Name</h2>
+              <p className="text-sm text-gray-400">Online</p>
             </div>
           </div>
-        ))
-      )}
+        </div>
+
+        {/* AI Characters List */}
+        <div className="overflow-y-auto h-[calc(100vh-180px)]">
+          {aiCharacters.map((char) => (
+            <div
+              key={char.id}
+              onClick={() => setSelectedChat(char.name)}
+              className={`p-4 hover:bg-gray-700 cursor-pointer transition-all duration-300 ${
+                selectedChat === char.name ? "bg-gray-700" : ""
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <div className={`w-10 h-10 rounded-full ${char.color} flex items-center justify-center`}>
+                  <MessageCircle className="text-white" size={20} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium text-gray-200">{char.name}</h3>
+                  <p className="text-sm text-gray-400 truncate">{char.lastMessage}</p>
+                </div>
+                <div className={`w-2 h-2 rounded-full ${
+                  char.status === 'online' ? 'bg-green-400' : 'bg-gray-500'
+                }`} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Settings & Logout */}
+        <div className="border-t border-gray-700 p-4 space-y-2 bg-gray-800">
+          <button className="w-full flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-all duration-300">
+            <Settings size={20} className="text-purple-400" />
+            <span>Settings</span>
+          </button>
+          <button className="w-full flex items-center space-x-2 px-4 py-2 text-red-400 hover:bg-gray-700 rounded-lg transition-all duration-300">
+            <LogOut size={20} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Chat Area */}
+      <div className="flex-1 flex flex-col bg-gray-900">
+        {/* Chat Header */}
+        <div className="p-4 border-b border-gray-700 bg-gray-800">
+          <div className="flex items-center space-x-3">
+            <h2 className="font-semibold text-xl text-gray-200">
+              {selectedChat}
+            </h2>
+            <span className="text-sm text-green-400">online</span>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${
+                message.sender === "You" ? "justify-end" : "justify-start"
+              }`}
+            >
+              <div
+                className={`max-w-[70%] rounded-lg p-3 ${
+                  message.sender === "You"
+                    ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
+                    : "bg-gray-800 text-gray-200"
+                }`}
+              >
+                <p className="text-sm font-medium mb-1">{message.sender}</p>
+                <p>{message.content}</p>
+                <p className="text-xs mt-1 opacity-70">{message.timestamp}</p>
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Message Input */}
+        <form onSubmit={handleSendMessage} className="p-4 bg-gray-800 border-t border-gray-700">
+          <div className="flex space-x-4">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type your message..."
+              className="flex-1 px-4 py-2 bg-gray-700 border-gray-600 text-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 placeholder-gray-400"
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 flex items-center space-x-2 transition-all duration-300"
+            >
+              <Send size={20} />
+              <span>Send</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

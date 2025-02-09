@@ -49,13 +49,8 @@ const Modal = ({ isOpen, onClose, onSave }) => {
           onSave(newCharacter); // Pass the new character data to parent component
         }
         alert("Bot saved successfully!");
-      } else {
-        alert("Error: " + result.message);
-      }
-    } catch (error) {
-      console.error("Error saving bot:", error);
-      alert("Failed to save bot. Please try again.");
-    }
+      } else {}
+    } catch (error) {}
     onClose();
   };
 

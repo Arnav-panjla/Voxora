@@ -235,6 +235,38 @@ const addNewAiCharacter = (newCharacter) => {
     );
   };
 
+  const handleButtonClick = (item) => {
+    console.log(`Button clicked: ${item.label}`);
+
+    if (item.label === 'Dashboard') {
+      router.push('/dashboard');  // Navigate to the Dashboard page
+    }
+
+    if (item.label === 'Chats') {
+      router.push('/chats');  // Navigate to the Chats page
+    }
+
+    if (item.label === 'Friends') {
+      router.push('/friends');  // Navigate to the Friends page
+    }
+
+    if (item.label === 'Create') {
+       setIsModalOpen(true);  // Open the Create modal
+    }
+
+    if (item.label === 'Community') {
+      window.location.href = 'https://github.com/Arnav-panjla/Voxora';  // Navigate to the GitHub page for the Community
+    }
+
+    if (item.label === 'Settings') {
+      router.push('/settings');  // Navigate to the Settings page
+    }
+
+    if (item.label === 'Logout') {
+      disconnectWallet();  // Call the logout function to disconnect the wallet
+    }
+  };
+
   if (!connected) {
     return null;
   }

@@ -4,7 +4,7 @@
 
 import { useRouter } from "next/navigation";
 import { useSDK } from "@metamask/sdk-react";
-
+import Modal from "../components/Modal";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { 
@@ -28,6 +28,8 @@ export default function HomePage() {
     { id: 2, sender: "You", content: "I'm doing great, thanks!", timestamp: "10:01 AM" },
     { id: 3, sender: "AI Bot 2", content: "That's wonderful to hear!", timestamp: "10:02 AM" }
   ]);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const [newMessage, setNewMessage] = useState("");
   const [selectedChat, setSelectedChat] = useState("AI Bot 1");
@@ -129,7 +131,7 @@ export default function HomePage() {
     }
   
     if (item.label === 'Create') {
-      router.push('/create');  // Navigate to the Create page
+       setIsModalOpen(true);  // Open the Create modal
     }
   
     if (item.label === 'Community') {
@@ -148,6 +150,10 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen bg-gray-900">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <h2 className="text-xl font-bold mb-4">Hello, this is a Modal! 🎉</h2>
+        <p>You can put any content here.</p>
+      </Modal>
       {/* Navigation Bar */}
       <div className="w-20 bg-gray-900 border-r border-gray-700 flex flex-col items-center py-4 space-y-8">
         {/* App Logo */}

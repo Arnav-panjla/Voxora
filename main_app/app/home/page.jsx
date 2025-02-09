@@ -1,5 +1,5 @@
 "use client";
-import aiCharactersData from "../data/aiCharacters";
+import { aiCharactersData, getInitialMessage, getRandomResponse } from '../data/aiCharacters';
 import { useRouter } from "next/navigation";
 import { useSDK } from "@metamask/sdk-react";
 import Modal from "../components/Modal";
@@ -21,175 +21,162 @@ import {
 
 export default function HomePage() {
   // Initialize AI characters with message history
-  const [aiCharacters, setAiCharacters] = useState(() => {
-    const storedCharacters = localStorage.getItem("aiCharacters");
-    if (storedCharacters) {
-      return JSON.parse(storedCharacters);
+// Initialize AI characters with message history
+const [aiCharacters, setAiCharacters] = useState(aiCharactersData.map(char => ({
+  ...char,
+  messages: [
+    {
+      id: 1,
+      sender: char.name,
+      content: "Hello!",
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
+  ]
+})));
+
+const [isModalOpen, setIsModalOpen] = useState(false);
+const [newMessage, setNewMessage] = useState("");
+const [selectedChat, setSelectedChat] = useState(aiCharacters[0]?.name || "");
+const [error, setError] = useState("");
+const messagesEndRef = useRef(null);
+
+// Router and SDK
+const router = useRouter();
+const { sdk, connected, account } = useSDK();
+
+// Navigation Items
+const navItems = [
+  { icon: Home, label: "Dashboard", color: "text-purple-400" },
+  { icon: MessageCircle, label: "Chats", color: "text-blue-400" },
+  { icon: Users, label: "Friends", color: "text-green-400" },
+  { icon: PlusCircle, label: "Create", color: "text-red-400" },
+  { icon: HeartHandshake, label: "Community", color: "text-orange-400" },
+  { icon: Settings, label: "Settings", color: "text-purple-400" },
+  { icon: LogOut, label: "Logout", color: "text-red-400" }
+];
+
+useEffect(() => {
+  scrollToBottom();
+}, [selectedChat, aiCharacters]);
+
+useEffect(() => {
+  if (!connected) {
+    router.push('/');
+  }
+}, [connected, router]);
+
+const scrollToBottom = () => {
+  messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+};
+
+const addNewAiCharacter = (newCharacter) => {
+  const characterWithMessages = {
+    ...newCharacter,
+    messages: []
+  };
+  setAiCharacters((prev) => [...prev, characterWithMessages]);
+};
+
+const handleSendMessage = (e) => {
+  e.preventDefault();
+  if (newMessage.trim()) {
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
-    // Initialize with default data and empty message arrays
-    return aiCharactersData.map(char => ({
-      ...char,
-      messages: [
-        {
-          id: 1,
-          sender: char.name,
-          content: "Hello! How can I help you today?",
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-      ]
-    }));
-  });
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newMessage, setNewMessage] = useState("");
-  const [selectedChat, setSelectedChat] = useState(aiCharacters[0]?.name || "");
-  const [error, setError] = useState("");
-  const messagesEndRef = useRef(null);
-
-  // Router and SDK
-  const router = useRouter();
-  const { sdk, connected, account } = useSDK();
-
-  // Navigation Items
-  const navItems = [
-    { icon: Home, label: "Dashboard", color: "text-purple-400" },
-    { icon: MessageCircle, label: "Chats", color: "text-blue-400" },
-    { icon: Users, label: "Friends", color: "text-green-400" },
-    { icon: PlusCircle, label: "Create", color: "text-red-400" },
-    { icon: HeartHandshake, label: "Community", color: "text-orange-400" },
-    { icon: Settings, label: "Settings", color: "text-purple-400" },
-    { icon: LogOut, label: "Logout", color: "text-red-400" }
-  ];
-
-  // Persist AI characters and their messages
-  useEffect(() => {
-    localStorage.setItem("aiCharacters", JSON.stringify(aiCharacters));
-  }, [aiCharacters]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [selectedChat, aiCharacters]);
-
-  useEffect(() => {
-    if (!connected) {
-      router.push('/');
-    }
-  }, [connected, router]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const addNewAiCharacter = (newCharacter) => {
-    const characterWithMessages = {
-      ...newCharacter,
-      messages: []
+    // Create new user message
+    const userMessage = {
+      id: Date.now(),
+      sender: "You",
+      content: newMessage,
+      timestamp
     };
-    setAiCharacters((prev) => [...prev, characterWithMessages]);
-  };
 
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (newMessage.trim()) {
-      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      
-      // Create new user message
-      const userMessage = {
-        id: Date.now(),
-        sender: "You",
-        content: newMessage,
-        timestamp
+    // Update AI characters with new message
+    setAiCharacters(prevChars => prevChars.map(char => {
+      if (char.name === selectedChat) {
+        return {
+          ...char,
+          lastMessage: newMessage,
+          messages: [...char.messages, userMessage]
+        };
+      }
+      return char;
+    }));
+
+    setNewMessage("");
+    
+    // Add AI response after a delay
+    setTimeout(() => {
+      const aiResponse = {
+        id: Date.now() + 1,
+        sender: selectedChat,
+        content: getRandomResponse(selectedChat),
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
-      // Update AI characters with new message
       setAiCharacters(prevChars => prevChars.map(char => {
         if (char.name === selectedChat) {
           return {
             ...char,
-            lastMessage: newMessage,
-            messages: [...char.messages, userMessage]
+            lastMessage: aiResponse.content,
+            messages: [...char.messages, aiResponse]
           };
         }
         return char;
       }));
-
-      setNewMessage("");
-      
-      // Simulate AI response
-      setTimeout(() => {
-        const aiResponse = {
-          id: Date.now() + 1,
-          sender: selectedChat,
-          content: "Thanks for your message! This is a simulated response.",
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-
-        setAiCharacters(prevChars => prevChars.map(char => {
-          if (char.name === selectedChat) {
-            return {
-              ...char,
-              lastMessage: aiResponse.content,
-              messages: [...char.messages, aiResponse]
-            };
-          }
-          return char;
-        }));
-      }, 1000);
-    }
-  };
-
-  const disconnectWallet = async () => {
-    try {
-      setError("");
-      if (sdk) {
-        await sdk.terminate();
-        localStorage.removeItem('metamask-connected');
-        router.push('/');
-      }
-    } catch (error) {
-      console.error("Error disconnecting from MetaMask:", error);
-      setError(error instanceof Error ? error.message : "Failed to disconnect from MetaMask");
-    }
-  };
-
-  const handleButtonClick = (item) => {
-    console.log(`Button clicked: ${item.label}`);
-  
-    switch (item.label) {
-      case 'Dashboard':
-        router.push('/dashboard');
-        break;
-      case 'Chats':
-        router.push('/chats');
-        break;
-      case 'Friends':
-        router.push('/friends');
-        break;
-      case 'Create':
-        setIsModalOpen(true);
-        break;
-      case 'Community':
-        window.location.href = 'https://github.com/Arnav-panjla/Voxora';
-        break;
-      case 'Settings':
-        router.push('/settings');
-        break;
-      case 'Logout':
-        disconnectWallet();
-        break;
-      default:
-        break;
-    }
-  };
-
-  // Get current chat messages
-  const currentMessages = aiCharacters.find(char => char.name === selectedChat)?.messages || [];
-
-  if (!connected) {
-    return null;
+    }, 1000);
   }
+};
 
+const disconnectWallet = async () => {
+  try {
+    setError("");
+    if (sdk) {
+      await sdk.terminate();
+      localStorage.removeItem('metamask-connected');
+      router.push('/');
+    }
+  } catch (error) {
+    console.error("Error disconnecting from MetaMask:", error);
+    setError(error instanceof Error ? error.message : "Failed to disconnect from MetaMask");
+  }
+};
+
+const handleButtonClick = (item) => {
+  console.log(`Button clicked: ${item.label}`);
+
+  switch (item.label) {
+    case 'Dashboard':
+      router.push('/dashboard');
+      break;
+    case 'Chats':
+      router.push('/chats');
+      break;
+    case 'Friends':
+      router.push('/friends');
+      break;
+    case 'Create':
+      setIsModalOpen(true);
+      break;
+    case 'Community':
+      window.location.href = 'https://github.com/Arnav-panjla/Voxora';
+      break;
+    case 'Settings':
+      router.push('/settings');
+      break;
+    case 'Logout':
+      disconnectWallet();
+      break;
+    default:
+      break;
+  }
+};
+
+// Get current chat messages
+const currentMessages = aiCharacters.find(char => char.name === selectedChat)?.messages || [];
+
+if (!connected) {
+  return null;
+}
   return (
     <div className="flex h-screen bg-gray-900">
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
@@ -250,7 +237,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-200">{char.name}</h3>
-                  <p className="text-sm text-gray-400 truncate">{char.lastMessage}</p>
+                  {char.lastMessage.split(' ').slice(0, 3).join(' ')}
                 </div>
                 <div className={`w-2 h-2 rounded-full ${
                   char.status === 'online' ? 'bg-green-400' : 'bg-gray-500'

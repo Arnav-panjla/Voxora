@@ -68,3 +68,4 @@ lerna.json
 
 # databases
 data/
+public/data/

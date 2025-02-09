@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const Modal = ({ isOpen, onClose }) => {
+const Modal = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     name: '',
     profile: '',
@@ -20,27 +20,42 @@ const Modal = ({ isOpen, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const jsonData = {
+    // Generate a new character entry
+    const newCharacter = {
+      id: Date.now(), // Generate a unique ID using timestamp
       name: formData.name,
-      profile: formData.profile,
-      description: formData.description,
+      status: "online", // Default status
+      lastMessage: "Hello! How are you today?", // Default last message
+      color: "bg-gradient-to-r from-purple-500 to-pink-500", // Default color
+      personality: formData.description,
+      responses: [
+        // Generate some default responses based on the description
+        `As ${formData.name}, I'm here to ${formData.description}`,
+        "How can I assist you today?"
+      ]
     };
 
     try {
       const response = await fetch("http://localhost:5173/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(jsonData),
+        body: JSON.stringify(newCharacter),
       });
 
       const result = await response.json();
 
       if (response.ok) {
+        if (onSave) {
+          onSave(newCharacter); // Pass the new character data to parent component
+        }
         alert("Bot saved successfully!");
       } else {
         alert("Error: " + result.message);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error saving bot:", error);
+      alert("Failed to save bot. Please try again.");
+    }
     onClose();
   };
 
@@ -103,7 +118,7 @@ const Modal = ({ isOpen, onClose }) => {
 
           <div>
             <label htmlFor="description" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Description *
+              Personality Description *
             </label>
             <textarea
               id="description"
@@ -113,7 +128,7 @@ const Modal = ({ isOpen, onClose }) => {
               onChange={handleChange}
               rows="4"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 resize-none"
-              placeholder="Describe your bot's purpose and personality..."
+              placeholder="Describe your bot's personality and expertise..."
             />
           </div>
 

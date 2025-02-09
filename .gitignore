@@ -1,51 +1,66 @@
-# Ignore all node_modules folders, no matter where they are
+# Node.js
 node_modules/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+/.pnp/
+/.pnp.js
 
-# Ignore build directories
-.next/
-out/
+# some file not being 
+eliza_opacity_avs
 
-# Ignore logs and environment files
-npm-debug.log
-yarn-debug.log
-yarn-error.log
-.env
-
-
-# Build output
-/dist
-
-# Vite specific
-/.vite
-/vite.lock
-
-# Dependency directories
-/.pnp
-.pnp.js
-
-# IDE settings
-.idea
-.vscode
-
-# Mac system files
-.DS_Store
+# TypeScript
+*.tsbuildinfo
+*.d.ts
 
 # Logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
-# Local environment files
+# Build output
+/dist/
+/build/
+/coverage/
+/.cache/
+
+# Docker
+*.dockerfile
+docker-compose.yml
+docker-compose-docs.yaml
+Dockerfile
+Dockerfile.docs
+
+# Test coverage
+coverage/
+
+# VSCode settings
+.vscode/
+
+# JetBrains IDE settings
+.idea/
+
+# MacOS
+.DS_Store
+
+# Environment files
+.env
 .env.local
 .env.*.local
 
-# Next.js build
-.next/
+# ESLint / Prettier
+.eslintcache
 
-# Build artifacts
+# Temporary files
+*.swp
+*.swo
+*~
+
+# Lerna
+lerna-debug.log
+lerna.json
+
+# Turbo (for turbo repo)
+.turbo/
+
+# Miscellaneous
 *.tgz
-
-# JetBrains IDEs
-*.iml
-
+*.zip

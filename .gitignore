@@ -9,6 +9,7 @@ yarn.lock
 # some file not being 
 eliza_opacity_avs
 
+
 # TypeScript
 *.tsbuildinfo
 *.d.ts
@@ -64,3 +65,6 @@ lerna.json
 # Miscellaneous
 *.tgz
 *.zip
+
+# databases
+data/

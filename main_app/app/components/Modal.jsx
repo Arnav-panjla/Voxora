@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const Modal = ({ isOpen, onClose, children }) => {
+const Modal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
     profile: '',
@@ -17,9 +17,30 @@ const Modal = ({ isOpen, onClose, children }) => {
     }
   }, [isOpen]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
+
+    const jsonData = {
+      name: formData.name,
+      profile: formData.profile,
+      description: formData.description,
+    };
+
+    try {
+      const response = await fetch("http://localhost:5173/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(jsonData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Bot saved successfully!");
+      } else {
+        alert("Error: " + result.message);
+      }
+    } catch (error) {}
     onClose();
   };
 

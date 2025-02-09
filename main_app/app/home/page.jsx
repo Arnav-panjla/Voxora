@@ -16,35 +16,60 @@ import {
   Palette,
   BookOpen,
   PlusCircle,
-  HeartHandshake
+  HeartHandshake,
+  UserPlus
 } from "lucide-react";
 
 export default function HomePage() {
-  // Initialize AI characters with message history
-// Initialize AI characters with message history
-const [aiCharacters, setAiCharacters] = useState(aiCharactersData.map(char => ({
-  ...char,
-  messages: [
-    {
-      id: 1,
-      sender: char.name,
-      content: "Hello!",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }
-  ]
-})));
+  // Initialize group chat
+  const groupChat = {
+    id: 'group-1',
+    name: 'Innovation Squad',
+    color: 'bg-gradient-to-r from-purple-500 to-pink-500',
+    status: 'online',
+    lastMessage: 'Welcome to the group chat!',
+    isGroup: true,
+    participants: [
+      aiCharactersData.find(char => char.id === 2), // Edison
+      aiCharactersData.find(char => char.id === 3), // Thor
+    ],
+    messages: [
+      {
+        id: 1,
+        sender: 'Edison',
+        content: "Hello everyone! Let's collaborate on something amazing!",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+    ]
+  };
 
-const [isModalOpen, setIsModalOpen] = useState(false);
-const [newMessage, setNewMessage] = useState("");
-const [selectedChat, setSelectedChat] = useState(aiCharacters[0]?.name || "");
-const [error, setError] = useState("");
-const messagesEndRef = useRef(null);
+  // Initialize AI characters with message history and include group chat
+  const [aiCharacters, setAiCharacters] = useState([
+    ...aiCharactersData.map(char => ({
+      ...char,
+      messages: [
+        {
+          id: 1,
+          sender: char.name,
+          content: "Hello!",
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]
+    })),
+    groupChat // Add group chat to the characters list
+  ]);
 
-// Router and SDK
-const router = useRouter();
-const { sdk, connected, account } = useSDK();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
+  const [selectedChat, setSelectedChat] = useState(aiCharacters[0]?.name || "");
+  const [error, setError] = useState("");
+  const messagesEndRef = useRef(null);
 
-// Navigation Items
+  // Router and SDK
+  const router = useRouter();
+  const { sdk, connected, account } = useSDK();
+
+  // Navigation Items
 const navItems = [
   { icon: Home, label: "Dashboard", color: "text-purple-400" },
   { icon: MessageCircle, label: "Chats", color: "text-blue-400" },
@@ -77,106 +102,143 @@ const addNewAiCharacter = (newCharacter) => {
   setAiCharacters((prev) => [...prev, characterWithMessages]);
 };
 
-const handleSendMessage = (e) => {
-  e.preventDefault();
-  if (newMessage.trim()) {
-    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    // Create new user message
-    const userMessage = {
-      id: Date.now(),
-      sender: "You",
-      content: newMessage,
-      timestamp
-    };
-
-    // Update AI characters with new message
-    setAiCharacters(prevChars => prevChars.map(char => {
-      if (char.name === selectedChat) {
-        return {
-          ...char,
-          lastMessage: newMessage,
-          messages: [...char.messages, userMessage]
-        };
-      }
-      return char;
-    }));
-
-    setNewMessage("");
-    
-    // Add AI response after a delay
-    setTimeout(() => {
-      const aiResponse = {
-        id: Date.now() + 1,
-        sender: selectedChat,
-        content: getRandomResponse(selectedChat),
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (newMessage.trim()) {
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      // Create new user message
+      const userMessage = {
+        id: Date.now(),
+        sender: "You",
+        content: newMessage,
+        timestamp
       };
 
+      // Update AI characters with new message
       setAiCharacters(prevChars => prevChars.map(char => {
         if (char.name === selectedChat) {
           return {
             ...char,
-            lastMessage: aiResponse.content,
-            messages: [...char.messages, aiResponse]
+            lastMessage: newMessage,
+            messages: [...char.messages, userMessage]
           };
         }
         return char;
       }));
-    }, 1000);
-  }
-};
 
-const disconnectWallet = async () => {
-  try {
-    setError("");
-    if (sdk) {
-      await sdk.terminate();
-      localStorage.removeItem('metamask-connected');
-      router.push('/');
+      setNewMessage("");
+      
+      // Handle group chat responses
+      if (selectedChat === 'Innovation Squad') {
+        // Add responses from both group members with delays
+        setTimeout(() => {
+          const edisonResponse = {
+            id: Date.now() + 1,
+            sender: "Edison",
+            content: getRandomResponse("Edison"),
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+
+          setAiCharacters(prevChars => prevChars.map(char => {
+            if (char.name === 'Innovation Squad') {
+              return {
+                ...char,
+                lastMessage: edisonResponse.content,
+                messages: [...char.messages, edisonResponse]
+              };
+            }
+            return char;
+          }));
+        }, 1000);
+
+        setTimeout(() => {
+          const thorResponse = {
+            id: Date.now() + 2,
+            sender: "Thor",
+            content: getRandomResponse("Thor"),
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+
+          setAiCharacters(prevChars => prevChars.map(char => {
+            if (char.name === 'Innovation Squad') {
+              return {
+                ...char,
+                lastMessage: thorResponse.content,
+                messages: [...char.messages, thorResponse]
+              };
+            }
+            return char;
+          }));
+        }, 2000);
+      } else {
+        // Regular single chat response
+        setTimeout(() => {
+          const aiResponse = {
+            id: Date.now() + 1,
+            sender: selectedChat,
+            content: getRandomResponse(selectedChat),
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+
+          setAiCharacters(prevChars => prevChars.map(char => {
+            if (char.name === selectedChat) {
+              return {
+                ...char,
+                lastMessage: aiResponse.content,
+                messages: [...char.messages, aiResponse]
+              };
+            }
+            return char;
+          }));
+        }, 1000);
+      }
     }
-  } catch (error) {
-    console.error("Error disconnecting from MetaMask:", error);
-    setError(error instanceof Error ? error.message : "Failed to disconnect from MetaMask");
+  };
+
+  // Get current chat messages
+  const currentChat = aiCharacters.find(char => char.name === selectedChat);
+  const currentMessages = currentChat?.messages || [];
+
+  // Render chat header based on chat type
+  const renderChatHeader = () => {
+    const chat = aiCharacters.find(char => char.name === selectedChat);
+    if (!chat) return null;
+
+    return (
+      <div className="p-4 border-b border-gray-700 bg-gray-800">
+        <div className="flex items-center space-x-3">
+          <h2 className="font-semibold text-xl text-gray-200">
+            {chat.name}
+          </h2>
+          {chat.isGroup ? (
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-400">
+                {chat.participants.length + 1} members
+              </span>
+              <div className="flex -space-x-2">
+                {chat.participants.map((participant, index) => (
+                  <div
+                    key={participant.id}
+                    className={`w-6 h-6 rounded-full ${participant.color} flex items-center justify-center ring-2 ring-gray-800`}
+                  >
+                    <span className="text-xs text-white">{participant.name[0]}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <span className="text-sm text-green-400">online</span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  if (!connected) {
+    return null;
   }
-};
 
-const handleButtonClick = (item) => {
-  console.log(`Button clicked: ${item.label}`);
-
-  switch (item.label) {
-    case 'Dashboard':
-      router.push('/dashboard');
-      break;
-    case 'Chats':
-      router.push('/chats');
-      break;
-    case 'Friends':
-      router.push('/friends');
-      break;
-    case 'Create':
-      setIsModalOpen(true);
-      break;
-    case 'Community':
-      window.location.href = 'https://github.com/Arnav-panjla/Voxora';
-      break;
-    case 'Settings':
-      router.push('/settings');
-      break;
-    case 'Logout':
-      disconnectWallet();
-      break;
-    default:
-      break;
-  }
-};
-
-// Get current chat messages
-const currentMessages = aiCharacters.find(char => char.name === selectedChat)?.messages || [];
-
-if (!connected) {
-  return null;
-}
   return (
     <div className="flex h-screen bg-gray-900">
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
@@ -205,7 +267,7 @@ if (!connected) {
           ))}
         </div>
       </div>
-
+      
       {/* Sidebar */}
       <div className="w-64 bg-gray-800 border-r border-gray-700">
         {/* User Profile */}
@@ -221,7 +283,7 @@ if (!connected) {
           </div>
         </div>
 
-        {/* AI Characters List */}
+        {/* AI Characters and Group Chat List */}
         <div className="overflow-y-auto h-[calc(100vh-180px)]">
           {aiCharacters.map((char) => (
             <div
@@ -233,11 +295,17 @@ if (!connected) {
             >
               <div className="flex items-center space-x-3">
                 <div className={`w-10 h-10 rounded-full ${char.color} flex items-center justify-center`}>
-                  <MessageCircle className="text-white" size={20} />
+                  {char.isGroup ? (
+                    <Users className="text-white" size={20} />
+                  ) : (
+                    <MessageCircle className="text-white" size={20} />
+                  )}
                 </div>
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-200">{char.name}</h3>
-                  {char.lastMessage.split(' ').slice(0, 3).join(' ')}
+                  <p className="text-sm text-gray-400 truncate">
+                  {char.lastMessage.substring(0, 21)}
+                  </p>
                 </div>
                 <div className={`w-2 h-2 rounded-full ${
                   char.status === 'online' ? 'bg-green-400' : 'bg-gray-500'
@@ -250,40 +318,43 @@ if (!connected) {
 
       {/* Chat Area */}
       <div className="flex-1 flex flex-col bg-gray-900">
-        {/* Chat Header */}
-        <div className="p-4 border-b border-gray-700 bg-gray-800">
-          <div className="flex items-center space-x-3">
-            <h2 className="font-semibold text-xl text-gray-200">
-              {selectedChat}
-            </h2>
-            <span className="text-sm text-green-400">online</span>
-          </div>
-        </div>
+        {renderChatHeader()}
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {currentMessages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.sender === "You" ? "justify-end" : "justify-start"
-              }`}
-            >
-              <div
-                className={`max-w-[70%] rounded-lg p-3 ${
-                  message.sender === "You"
-                    ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
-                    : "bg-gray-800 text-gray-200"
-                }`}
-              >
-                <p className="text-sm font-medium mb-1">{message.sender}</p>
-                <p>{message.content}</p>
-                <p className="text-xs mt-1 opacity-70">{message.timestamp}</p>
-              </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
+<div className="flex-1 overflow-y-auto p-4 space-y-4">
+  {currentMessages.map((message) => (
+    <div
+      key={message.id}
+      className={`flex ${
+        message.sender === "You" ? "justify-end" : "justify-start"
+      }`}
+    >
+      <div
+        className={`relative max-w-[70%] rounded-lg p-3 ${
+          message.sender === "You"
+            ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
+            : "bg-gray-800 text-gray-200"
+        }`}
+      >
+        <p className="text-sm font-medium mb-1">{message.sender}</p>
+        <p>{message.content}</p>
+        <p className="text-xs mt-1 opacity-70">{message.timestamp}</p>
+
+        {/* Add a small clickable link at the bottom-right corner */}
+        <a
+          href="/data/proof.json" // Replace this with the actual path to the JSON file
+          target="_blank" // Open the link in a new window/tab
+          rel="noopener noreferrer" // Security best practice
+          className="absolute bottom-2 right-2 text-xs text-blue-400 hover:underline"
+        >
+          proof
+        </a>
+      </div>
+    </div>
+  ))}
+  <div ref={messagesEndRef} />
+</div>
+
 
         {/* Message Input */}
         <form onSubmit={handleSendMessage} className="p-4 bg-gray-800 border-t border-gray-700">
